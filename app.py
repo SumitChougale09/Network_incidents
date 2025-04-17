@@ -46,12 +46,14 @@ from auth import auth_bp
 from incident import incident_bp
 from analysis import analysis_bp
 from api import api_bp
+from knowledge_base import kb_bp, init_kb_data
 
 # Register blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(incident_bp)
 app.register_blueprint(analysis_bp)
 app.register_blueprint(api_bp, url_prefix='/api')
+app.register_blueprint(kb_bp)
 
 # Load user from user_id
 @login_manager.user_loader
@@ -66,6 +68,7 @@ def home():
 # Initialize sample data for the database if empty
 with app.app_context():
     init_data()
+    init_kb_data()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
