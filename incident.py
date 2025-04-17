@@ -96,7 +96,7 @@ def view_incident(incident_id):
     teams = Team.get_all_teams()
     
     # Get potential assignees (all support engineers)
-    support_engineers = [u for u in User.users.values() if u.role == 'support_engineer']
+    support_engineers = User.query.filter_by(role='support_engineer').all()
     
     return render_template(
         'incident_details.html',
