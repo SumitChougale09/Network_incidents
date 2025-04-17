@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<style>
+    .ck-editor__editable_inline {
+        min-height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5 mb-4">
+            <i class="fas fa-edit me-2"></i>Edit Knowledge Base Article
+        </h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('kb.view_article', article_id=article.id) }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Article
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-edit me-2"></i>Article Details
+        </h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('kb.edit_article', article_id=article.id) }}" method="POST">
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ article.title }}" required>
+                <div class="form-text">A clear, descriptive title for the knowledge base article</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category" required>
+                    <option value="" disabled>-- Select Category --</option>
+                    <option value="Network" {% if article.category == 'Network' %}selected{% endif %}>Network</option>
+                    <option value="Security" {% if article.category == 'Security' %}selected{% endif %}>Security</option>
+                    <option value="Application" {% if article.category == 'Application' %}selected{% endif %}>Application</option>
+                    <option value="Hardware" {% if article.category == 'Hardware' %}selected{% endif %}>Hardware</option>
+                    <option value="Other" {% if article.category == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="severity_level" class="form-label">Severity Level</label>
+                <select class="form-select" id="severity_level" name="severity_level">
+                    <option value="" disabled>-- Select Severity --</option>
+                    <option value="critical" {% if article.severity_level == 'critical' %}selected{% endif %}>Critical</option>
+                    <option value="high" {% if article.severity_level == 'high' %}selected{% endif %}>High</option>
+                    <option value="medium" {% if article.severity_level == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="low" {% if article.severity_level == 'low' %}selected{% endif %}>Low</option>
+                </select>
+                <div class="form-text">The severity level this article is most relevant for</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="tags" class="form-label">Tags</label>
+                <input type="text" class="form-control" id="tags" name="tags" value="{{ article.tags }}">
+                <div class="form-text">Comma-separated tags for better searchability (e.g., network,dns,troubleshooting)</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="content" class="form-label">Content</label>
+                <textarea class="form-control" id="content" name="content" rows="10" required>{{ article.content }}</textarea>
+                <div class="form-text">HTML formatting is supported for better readability</div>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Update Article
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- CKEditor for rich text editing -->
+<script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        ClassicEditor
+            .create(document.querySelector('#content'))
+            .catch(error => {
+                console.error(error);
+            });
+    });
+</script>
+{% endblock %}

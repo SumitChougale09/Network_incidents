@@ -261,44 +261,73 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header bg-dark">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-edit me-2"></i>Incident Details
-            </h5>
+    <div class="row">
+        <!-- Incident Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>Incident Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="incident-form" action="{{ url_for('incident.new_incident') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                            <div class="form-text">A brief, descriptive title for the incident</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="5"></textarea>
+                            <div class="form-text">Detailed description of the incident, including symptoms and impact</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="severity" class="form-label">Severity</label>
+                            <select class="form-select" id="severity" name="severity" required>
+                                <option value="" selected disabled>-- Select Severity --</option>
+                                <option value="critical">Critical - Service Down</option>
+                                <option value="high">High - Major Impact</option>
+                                <option value="medium">Medium - Partial Impact</option>
+                                <option value="low">Low - Minor Impact</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Incident
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form action="{{ url_for('incident.new_incident') }}" method="POST">
-                <div class="mb-3">
-                    <label for="title" class="form-label">Title</label>
-                    <input type="text" class="form-control" id="title" name="title" required>
-                    <div class="form-text">A brief, descriptive title for the incident</div>
+        
+        <!-- Knowledge Base Suggestions -->
+        <div class="col-lg-4">
+            <div class="card knowledge-base-suggestions">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Potential Solutions
+                    </h5>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="5"></textarea>
-                    <div class="form-text">Detailed description of the incident, including symptoms and impact</div>
+                <div id="kb-suggestions" class="card-body" style="display: none;">
+                    <!-- Suggestions will be loaded here dynamically -->
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">Start describing your incident to find potential solutions</p>
+                    </div>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="severity" class="form-label">Severity</label>
-                    <select class="form-select" id="severity" name="severity" required>
-                        <option value="" selected disabled>-- Select Severity --</option>
-                        <option value="critical">Critical - Service Down</option>
-                        <option value="high">High - Major Impact</option>
-                        <option value="medium">Medium - Partial Impact</option>
-                        <option value="low">Low - Minor Impact</option>
-                    </select>
-                </div>
-                
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane me-2"></i>Submit Incident
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if not incident %}
+<!-- Include Knowledge Base suggestions JavaScript only for new incident page -->
+<script src="{{ url_for('static', filename='js/kb_suggestions.js') }}"></script>
 {% endif %}
 {% endblock %}
