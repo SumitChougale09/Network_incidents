@@ -1,0 +1,172 @@
+/* Custom CSS styles for Network Incident Management System */
+
+/* Dashboard */
+.stats-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Activity timeline styling */
+.activity-timeline {
+    position: relative;
+    padding-left: 10px;
+}
+
+.activity-item {
+    position: relative;
+    padding-bottom: 20px;
+    padding-left: 20px;
+    border-left: 3px solid #6c757d;
+}
+
+.activity-item:last-child {
+    padding-bottom: 0;
+}
+
+.activity-item.incident_created {
+    border-left-color: #28a745;
+}
+
+.activity-item.incident_assigned {
+    border-left-color: #17a2b8;
+}
+
+.activity-item.status_update {
+    border-left-color: #ffc107;
+}
+
+.activity-item.incident_update {
+    border-left-color: #6610f2;
+}
+
+/* Incident details styling */
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.updates-timeline .card {
+    margin-left: 20px;
+    position: relative;
+}
+
+.updates-timeline .card::before {
+    content: "";
+    position: absolute;
+    left: -28px;
+    top: 15px;
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+    background-color: #4e73df;
+    border: 3px solid #e3e6f0;
+    z-index: 2;
+}
+
+.updates-timeline .card::after {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 0;
+    height: 100%;
+    border-left: 2px dashed #e3e6f0;
+    z-index: 1;
+}
+
+.updates-timeline .card:first-child::after {
+    top: 15px;
+}
+
+.updates-timeline .card:last-child::after {
+    height: 15px;
+}
+
+/* Analysis dashboard styling */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.prediction-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.prediction-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.prediction-high {
+    border-left: 4px solid #dc3545;
+}
+
+.prediction-medium {
+    border-left: 4px solid #ffc107;
+}
+
+.prediction-low {
+    border-left: 4px solid #28a745;
+}
+
+/* Improve navbar styling */
+.navbar-dark {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Improve card styling */
+.card {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    border: none;
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 1rem 1.25rem;
+}
+
+/* Add animation to alerts */
+.alert {
+    animation: fadeInDown 0.5s;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Make tables more professional */
+.table-hover tbody tr:hover {
+    background-color: rgba(106, 90, 205, 0.1);
+}
+
+/* Improve form controls */
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(106, 90, 205, 0.25);
+}
+
+/* Custom button hover and active states */
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}

@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if incident %}
+    <!-- Incident Details -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 mb-2">
+                <i class="fas fa-exclamation-circle me-2"></i>{{ incident.title }}
+            </h1>
+            <div>
+                {% if incident.severity == 'critical' %}
+                    <span class="badge bg-danger me-2">Critical</span>
+                {% elif incident.severity == 'high' %}
+                    <span class="badge bg-warning text-dark me-2">High</span>
+                {% elif incident.severity == 'medium' %}
+                    <span class="badge bg-info me-2">Medium</span>
+                {% else %}
+                    <span class="badge bg-success me-2">Low</span>
+                {% endif %}
+                
+                {% if incident.status == 'open' %}
+                    <span class="badge bg-secondary">Open</span>
+                {% elif incident.status == 'assigned' %}
+                    <span class="badge bg-primary">Assigned</span>
+                {% elif incident.status == 'in_progress' %}
+                    <span class="badge bg-info">In Progress</span>
+                {% elif incident.status == 'resolved' %}
+                    <span class="badge bg-success">Resolved</span>
+                {% else %}
+                    <span class="badge bg-dark">Closed</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('incident.list_incidents') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Incidents
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Incident Information -->
+        <div class="col-lg-8 mb-4">
+            <div class="card mb-4">
+                <div class="card-header bg-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Incident Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Description</h6>
+                        <p>{{ incident.description }}</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-muted mb-2">Reported By</h6>
+                            <p>{{ incident.reporter_id }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-muted mb-2">Reported At</h6>
+                            <p>{{ incident.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                        {% if incident.assignee_id %}
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-muted mb-2">Assigned To</h6>
+                            <p>{{ incident.assignee_id }}</p>
+                        </div>
+                        {% endif %}
+                        {% if incident.team_id %}
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-muted mb-2">Team</h6>
+                            <p>{{ incident.team_id }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Updates Section -->
+            <div class="card">
+                <div class="card-header bg-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-comments me-2"></i>Updates & Activities
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Update Form -->
+                    <form action="{{ url_for('incident.update_incident', incident_id=incident.id) }}" method="POST" class="mb-4">
+                        <div class="mb-3">
+                            <label for="update_content" class="form-label">Add Update</label>
+                            <textarea class="form-control" id="update_content" name="update_content" rows="3" required></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Post Update
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Updates Timeline -->
+                    <div class="updates-timeline">
+                        {% if updates %}
+                            {% for update in updates %}
+                                <div class="card mb-3 border-left-primary">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <h6 class="mb-0">Update #{{ loop.index }}</h6>
+                                            <small class="text-muted">{{ update.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </div>
+                                        <p class="mb-0">{{ update.content }}</p>
+                                    </div>
+                                    <div class="card-footer bg-light py-1">
+                                        <small class="text-muted">By: {{ update.user_id }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">No updates yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incident Management -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tasks me-2"></i>Incident Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('incident.update_incident', incident_id=incident.id) }}" method="POST">
+                        <!-- Status Update -->
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Update Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="open" {% if incident.status == 'open' %}selected{% endif %}>Open</option>
+                                <option value="assigned" {% if incident.status == 'assigned' %}selected{% endif %}>Assigned</option>
+                                <option value="in_progress" {% if incident.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="resolved" {% if incident.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="closed" {% if incident.status == 'closed' %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Team Assignment -->
+                        <div class="mb-3">
+                            <label for="team_id" class="form-label">Assign Team</label>
+                            <select class="form-select" id="team_id" name="team_id">
+                                <option value="">-- Select Team --</option>
+                                {% for team in teams %}
+                                    <option value="{{ team.id }}" {% if incident.team_id == team.id %}selected{% endif %}>
+                                        {{ team.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Assignee (Support Engineer) -->
+                        {% if current_user.role == 'admin' %}
+                        <div class="mb-3">
+                            <label for="assignee_id" class="form-label">Assign Engineer</label>
+                            <select class="form-select" id="assignee_id" name="assignee_id">
+                                <option value="">-- Select Engineer --</option>
+                                {% for engineer in support_engineers %}
+                                    <option value="{{ engineer.id }}" {% if incident.assignee_id == engineer.id %}selected{% endif %}>
+                                        {{ engineer.username }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="card">
+                <div class="card-header bg-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>Timeline
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Incident Created</h6>
+                                <small>{{ incident.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">Incident was reported</p>
+                        </li>
+                        
+                        {% if incident.status == 'assigned' or incident.status == 'in_progress' or incident.status == 'resolved' or incident.status == 'closed' %}
+                        <li class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Incident Assigned</h6>
+                                <small>{{ incident.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">Assigned to team</p>
+                        </li>
+                        {% endif %}
+                        
+                        {% if incident.status == 'in_progress' or incident.status == 'resolved' or incident.status == 'closed' %}
+                        <li class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Work Started</h6>
+                                <small>{{ incident.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">Work in progress</p>
+                        </li>
+                        {% endif %}
+                        
+                        {% if incident.status == 'resolved' or incident.status == 'closed' %}
+                        <li class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Incident Resolved</h6>
+                                <small>{{ incident.resolved_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">Issue has been resolved</p>
+                        </li>
+                        {% endif %}
+                        
+                        {% if incident.status == 'closed' %}
+                        <li class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Incident Closed</h6>
+                                <small>{{ incident.closed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">Incident case closed</p>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <!-- New Incident Form -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 mb-4">
+                <i class="fas fa-plus-circle me-2"></i>Report New Incident
+            </h1>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('incident.list_incidents') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Incidents
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-dark">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-edit me-2"></i>Incident Details
+            </h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('incident.new_incident') }}" method="POST">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="title" name="title" required>
+                    <div class="form-text">A brief, descriptive title for the incident</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="5"></textarea>
+                    <div class="form-text">Detailed description of the incident, including symptoms and impact</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="severity" class="form-label">Severity</label>
+                    <select class="form-select" id="severity" name="severity" required>
+                        <option value="" selected disabled>-- Select Severity --</option>
+                        <option value="critical">Critical - Service Down</option>
+                        <option value="high">High - Major Impact</option>
+                        <option value="medium">Medium - Partial Impact</option>
+                        <option value="low">Low - Minor Impact</option>
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Incident
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

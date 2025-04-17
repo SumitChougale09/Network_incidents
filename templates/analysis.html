@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    .prediction-card {
+        transition: transform 0.2s;
+    }
+    .prediction-card:hover {
+        transform: translateY(-5px);
+    }
+    .prediction-high {
+        border-left: 4px solid #dc3545;
+    }
+    .prediction-medium {
+        border-left: 4px solid #ffc107;
+    }
+    .prediction-low {
+        border-left: 4px solid #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5 mb-4">
+            <i class="fas fa-chart-line me-2"></i>Analysis Dashboard
+        </h1>
+    </div>
+</div>
+
+{% if not admin_access %}
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Admin Access Required</strong>
+    <p class="mb-0">You need admin privileges to access the full analysis dashboard.</p>
+</div>
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-xl-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-area me-2"></i>Incident Trends
+                </h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-light active" id="trend-week">Week</button>
+                    <button type="button" class="btn btn-sm btn-outline-light" id="trend-month">Month</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="incidentTrendsChart"></canvas>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                    <div class="text-center">
+                        <h6 class="mb-1">Avg. Time to Resolve</h6>
+                        <h4 id="avgResolutionTime">--</h4>
+                    </div>
+                    <div class="text-center">
+                        <h6 class="mb-1">Total Incidents</h6>
+                        <h4 id="totalIncidents">--</h4>
+                    </div>
+                    <div class="text-center">
+                        <h6 class="mb-1">Success Rate</h6>
+                        <h4 id="successRate">--</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-fire me-2"></i>Incident Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="severityChart"></canvas>
+                </div>
+                <div class="mt-3">
+                    <h6 class="text-center mb-2">Top Categories</h6>
+                    <div id="topCategories">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Network Connectivity</span>
+                            <span class="badge bg-primary rounded-pill">40%</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 10px;">
+                            <div class="progress-bar" role="progressbar" style="width: 40%;" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Security Issues</span>
+                            <span class="badge bg-info rounded-pill">30%</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 10px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 30%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Hardware Failures</span>
+                            <span class="badge bg-warning rounded-pill text-dark">20%</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 10px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if admin_access %}
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users-cog me-2"></i>Team Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="teamPerformanceChart"></canvas>
+                </div>
+                <div class="mt-3">
+                    <h6 class="text-center mb-3">Resolution Time by Team (Hours)</h6>
+                    <div id="teamPerformanceMetrics"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-crystal-ball me-2"></i>Incident Prediction
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <p class="text-muted">
+                        Predicted number of incidents in the next 7 days based on historical data and patterns.
+                    </p>
+                </div>
+                <div id="predictionContainer" class="row">
+                    <!-- Prediction cards will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load incident trends data
+    fetch('/api/analysis/incident-trends')
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            const avgResolutionTime = data.avg_resolution_time ? data.avg_resolution_time.toFixed(1) + ' hrs' : 'N/A';
+            document.getElementById('avgResolutionTime').textContent = avgResolutionTime;
+            
+            // Incidents by day chart
+            const trendLabels = data.incidents_by_day.map(item => item.date);
+            const trendData = data.incidents_by_day.map(item => item.count);
+            const totalIncidents = trendData.reduce((acc, val) => acc + val, 0);
+            document.getElementById('totalIncidents').textContent = totalIncidents;
+            
+            // Success rate (placeholder)
+            document.getElementById('successRate').textContent = '85%';
+            
+            const trendsCtx = document.getElementById('incidentTrendsChart').getContext('2d');
+            const trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: 'Incidents',
+                        data: trendData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Severity chart
+            const severityLabels = data.incidents_by_severity.map(item => item.severity);
+            const severityData = data.incidents_by_severity.map(item => item.count);
+            const severityColors = {
+                'critical': 'rgba(220, 53, 69, 0.7)',
+                'high': 'rgba(255, 193, 7, 0.7)',
+                'medium': 'rgba(23, 162, 184, 0.7)',
+                'low': 'rgba(40, 167, 69, 0.7)'
+            };
+            const severityBorderColors = {
+                'critical': 'rgb(220, 53, 69)',
+                'high': 'rgb(255, 193, 7)',
+                'medium': 'rgb(23, 162, 184)',
+                'low': 'rgb(40, 167, 69)'
+            };
+            
+            const severityCtx = document.getElementById('severityChart').getContext('2d');
+            const severityChart = new Chart(severityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: severityLabels,
+                    datasets: [{
+                        data: severityData,
+                        backgroundColor: severityLabels.map(label => severityColors[label] || 'rgba(108, 117, 125, 0.7)'),
+                        borderColor: severityLabels.map(label => severityBorderColors[label] || 'rgb(108, 117, 125)'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+            
+            {% if admin_access %}
+            // Load team performance data
+            fetch('/api/analysis/performance')
+                .then(response => response.json())
+                .then(data => {
+                    const teamLabels = data.team_incident_counts.map(item => `Team ${item.team_id}`);
+                    const teamCounts = data.team_incident_counts.map(item => item.count);
+                    
+                    // Team performance chart
+                    const performanceCtx = document.getElementById('teamPerformanceChart').getContext('2d');
+                    const performanceChart = new Chart(performanceCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: teamLabels,
+                            datasets: [{
+                                label: 'Incidents Handled',
+                                data: teamCounts,
+                                backgroundColor: 'rgba(106, 90, 205, 0.7)',
+                                borderColor: 'rgba(106, 90, 205, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Team resolution times
+                    const metricsContainer = document.getElementById('teamPerformanceMetrics');
+                    data.team_resolution_times.forEach(item => {
+                        const teamName = `Team ${item.team_id}`;
+                        const resolutionTime = item.resolution_time.toFixed(1);
+                        
+                        const progressBar = document.createElement('div');
+                        progressBar.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>${teamName}</span>
+                                <span class="badge bg-primary rounded-pill">${resolutionTime} hrs</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: ${Math.min(100, item.resolution_time * 10)}%;" 
+                                     aria-valuenow="${item.resolution_time}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="10"></div>
+                            </div>
+                        `;
+                        metricsContainer.appendChild(progressBar);
+                    });
+                })
+                .catch(error => console.error('Error loading team performance data:', error));
+                
+            // Load prediction data
+            fetch('/api/analysis/prediction')
+                .then(response => response.json())
+                .then(data => {
+                    const predictionContainer = document.getElementById('predictionContainer');
+                    
+                    // Generate prediction cards
+                    data.predictions.forEach(item => {
+                        const count = item.predicted_incidents;
+                        let severityClass = 'prediction-low';
+                        let severityText = 'Low';
+                        
+                        if (count >= 5) {
+                            severityClass = 'prediction-high';
+                            severityText = 'High';
+                        } else if (count >= 3) {
+                            severityClass = 'prediction-medium';
+                            severityText = 'Medium';
+                        }
+                        
+                        const dateObj = new Date(item.date);
+                        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                            weekday: 'short',
+                            month: 'short', 
+                            day: 'numeric'
+                        });
+                        
+                        const predCard = document.createElement('div');
+                        predCard.className = 'col-md-4 mb-3';
+                        predCard.innerHTML = `
+                            <div class="card prediction-card ${severityClass}">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">${formattedDate}</h6>
+                                    <h2 class="display-4">${count}</h2>
+                                    <span class="badge ${severityClass === 'prediction-high' ? 'bg-danger' : 
+                                                        severityClass === 'prediction-medium' ? 'bg-warning text-dark' : 
+                                                        'bg-success'}">${severityText}</span>
+                                </div>
+                            </div>
+                        `;
+                        predictionContainer.appendChild(predCard);
+                    });
+                })
+                .catch(error => console.error('Error loading prediction data:', error));
+            {% endif %}
+        })
+        .catch(error => console.error('Error loading incident trend data:', error));
+});
+</script>
+{% endblock %}

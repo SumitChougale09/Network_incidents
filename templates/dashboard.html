@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<style>
+    .stats-card {
+        transition: transform 0.3s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .activity-item {
+        border-left: 3px solid #6c757d;
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
+    .activity-item.incident_created {
+        border-left-color: #28a745;
+    }
+    .activity-item.incident_assigned {
+        border-left-color: #17a2b8;
+    }
+    .activity-item.status_update {
+        border-left-color: #ffc107;
+    }
+    .activity-item.incident_update {
+        border-left-color: #6610f2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5 mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('incident.new_incident') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Report Incident
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-primary text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total Incidents</h5>
+                <h2 class="display-4">{{ stats.total }}</h2>
+                <p class="card-text">
+                    <i class="fas fa-exclamation-triangle me-1"></i> All incidents
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-warning text-dark h-100">
+            <div class="card-body">
+                <h5 class="card-title">Open & Assigned</h5>
+                <h2 class="display-4">{{ stats.by_status.open + stats.by_status.assigned }}</h2>
+                <p class="card-text">
+                    <i class="fas fa-clock me-1"></i> Pending incidents
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-info text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">In Progress</h5>
+                <h2 class="display-4">{{ stats.by_status.in_progress }}</h2>
+                <p class="card-text">
+                    <i class="fas fa-tools me-1"></i> Being worked on
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card bg-success text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Resolved</h5>
+                <h2 class="display-4">{{ stats.by_status.resolved + stats.by_status.closed }}</h2>
+                <p class="card-text">
+                    <i class="fas fa-check-circle me-1"></i> Completed incidents
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Severity Stats -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-fire me-2"></i>Incidents by Severity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="p-3 rounded-3 bg-danger bg-opacity-25 mb-2">
+                            <h3>{{ stats.by_severity.critical }}</h3>
+                            <p class="mb-0">Critical</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-3 rounded-3 bg-warning bg-opacity-25 mb-2">
+                            <h3>{{ stats.by_severity.high }}</h3>
+                            <p class="mb-0">High</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-3 rounded-3 bg-info bg-opacity-25 mb-2">
+                            <h3>{{ stats.by_severity.medium }}</h3>
+                            <p class="mb-0">Medium</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-3 rounded-3 bg-success bg-opacity-25 mb-2">
+                            <h3>{{ stats.by_severity.low }}</h3>
+                            <p class="mb-0">Low</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <canvas id="severityChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Incidents -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Incidents
+                    </h5>
+                    <a href="{{ url_for('incident.list_incidents') }}" class="btn btn-sm btn-outline-light">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% if recent_incidents %}
+                        {% for incident in recent_incidents %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <a href="{{ url_for('incident.view_incident', incident_id=incident.id) }}" class="text-decoration-none">
+                                        <h6 class="mb-1">{{ incident.title }}</h6>
+                                    </a>
+                                    <small class="text-muted">{{ incident.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                <p class="mb-1 text-truncate">{{ incident.description }}</p>
+                                <div>
+                                    {% if incident.severity == 'critical' %}
+                                        <span class="badge bg-danger">Critical</span>
+                                    {% elif incident.severity == 'high' %}
+                                        <span class="badge bg-warning text-dark">High</span>
+                                    {% elif incident.severity == 'medium' %}
+                                        <span class="badge bg-info">Medium</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Low</span>
+                                    {% endif %}
+                                    
+                                    {% if incident.status == 'open' %}
+                                        <span class="badge bg-secondary">Open</span>
+                                    {% elif incident.status == 'assigned' %}
+                                        <span class="badge bg-primary">Assigned</span>
+                                    {% elif incident.status == 'in_progress' %}
+                                        <span class="badge bg-info">In Progress</span>
+                                    {% elif incident.status == 'resolved' %}
+                                        <span class="badge bg-success">Resolved</span>
+                                    {% else %}
+                                        <span class="badge bg-dark">Closed</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="list-group-item text-center">
+                            <p class="text-muted mb-0">No incidents yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bell me-2"></i>Recent Activities
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="activity-timeline">
+                    {% if recent_activities %}
+                        {% for activity in recent_activities %}
+                            <div class="activity-item {{ activity.action_type }}">
+                                <small class="text-muted">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                                <p class="mb-0">{{ activity.description }}</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No activities yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Severity Chart
+    const severityData = {
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [{
+            label: 'Incidents by Severity',
+            data: [
+                {{ stats.by_severity.critical }}, 
+                {{ stats.by_severity.high }}, 
+                {{ stats.by_severity.medium }}, 
+                {{ stats.by_severity.low }}
+            ],
+            backgroundColor: [
+                'rgba(220, 53, 69, 0.7)',
+                'rgba(255, 193, 7, 0.7)',
+                'rgba(23, 162, 184, 0.7)',
+                'rgba(40, 167, 69, 0.7)'
+            ],
+            borderColor: [
+                'rgb(220, 53, 69)',
+                'rgb(255, 193, 7)',
+                'rgb(23, 162, 184)',
+                'rgb(40, 167, 69)'
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    const severityCtx = document.getElementById('severityChart').getContext('2d');
+    new Chart(severityCtx, {
+        type: 'bar',
+        data: severityData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
