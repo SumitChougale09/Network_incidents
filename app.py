@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import logging
 from flask import Flask, redirect, url_for
 from extentions import db
-from knowledge_base import init_kb_data
+from flask_migrate import Migrate
 
 # Load environment variables
 load_dotenv()
@@ -27,7 +27,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
-
+    migrate = Migrate(app, db)
     # Import models
     from models import User
 
@@ -40,13 +40,13 @@ def create_app():
     from incident import incident_bp
     from analysis import analysis_bp
     from api import api_bp
-    from knowledge_base import kb_bp, init_kb_data
+ 
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(incident_bp)
     app.register_blueprint(analysis_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
-    app.register_blueprint(kb_bp)
+    #app.register_blueprint(kb_bp)
 
     @app.route('/')
     def home():
@@ -62,6 +62,6 @@ if __name__ == '__main__':
         from models import init_data
         db.create_all()
         init_data()
-        init_kb_data()
+        
     
     app.run(host='0.0.0.0', port=5000, debug=True)

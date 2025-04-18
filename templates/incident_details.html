@@ -103,16 +103,112 @@
                     <div class="updates-timeline">
                         {% if updates %}
                             {% for update in updates %}
-                                <div class="card mb-3 border-left-primary">
+                                <div class="card mb-3 {% if 'AI Analysis Results' in update.content %}border-left-info{% else %}border-left-primary{% endif %}">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between mb-2">
-                                            <h6 class="mb-0">Update #{{ loop.index }}</h6>
+                                            <h6 class="mb-0">
+                                                {% if 'AI Analysis Results' in update.content %}
+                                                    <i class="fas fa-robot me-2 text-info"></i>AI Analysis
+                                                {% else %}
+                                                    Update #{{ loop.index }}
+                                                {% endif %}
+                                            </h6>
                                             <small class="text-muted">{{ update.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                                         </div>
-                                        <p class="mb-0">{{ update.content }}</p>
+                                        
+                                        {% if 'AI Analysis Results' in update.content %}
+                                            <!-- Parse and format AI analysis content -->
+                                            {% set content_parts = update.content.split('\n\n') %}
+                                            
+                                            <div class="ai-analysis">
+                                                <!-- Root Cause Analysis -->
+                                                <div class="mb-3">
+                                                    <h6 class="text-info"><i class="fas fa-search me-2"></i>Root Cause Analysis</h6>
+                                                    <div class="card bg-light">
+                                                        <div class="card-body py-2">
+                                                            {% if content_parts|length > 2 %}
+                                                                {{ content_parts[2] }}
+                                                            {% else %}
+                                                                <em>No root cause analysis available</em>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Suggested Actions -->
+                                                <div class="mb-3">
+                                                    <h6 class="text-success"><i class="fas fa-tasks me-2"></i>Suggested Actions</h6>
+                                                    <ul class="list-group">
+                                                        {% if content_parts|length > 4 %}
+                                                            {% for line in content_parts[4].split('\n') %}
+                                                                {% if line.startswith('- ') %}
+                                                                    <li class="list-group-item py-1">{{ line[2:] }}</li>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <li class="list-group-item py-1"><em>No suggested actions available</em></li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                                
+                                                <!-- Confidence Score -->
+                                                <div class="mb-3">
+                                                    <h6><i class="fas fa-chart-line me-2"></i>Confidence Score</h6>
+                                                    {% if content_parts|length > 6 %}
+                                                        {% set confidence_line = content_parts[6] %}
+                                                        {% set confidence_parts = confidence_line.split(':') %}
+                                                        {% if confidence_parts|length > 1 %}
+                                                            {% set confidence = confidence_parts[1].strip() %}
+                                                            {% set confidence_value = confidence.replace('%', '') | float %}
+                                                            <div class="progress">
+                                                                <div class="progress-bar 
+                                                                    {% if confidence_value > 75 %}bg-success
+                                                                    {% elif confidence_value > 50 %}bg-info
+                                                                    {% elif confidence_value > 25 %}bg-warning
+                                                                    {% else %}bg-danger{% endif %}"
+                                                                    role="progressbar" style="width: {{ confidence_value }}%"
+                                                                    aria-valuenow="{{ confidence_value }}" aria-valuemin="0" aria-valuemax="100">
+                                                                    {{ confidence }}
+                                                                </div>
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-secondary" role="progressbar" style="width: 50%" 
+                                                                    aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                                                                    Unknown
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <div class="progress">
+                                                            <div class="progress-bar bg-secondary" role="progressbar" style="width: 50%" 
+                                                                aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                                                                Unknown
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <!-- References -->
+                                                {% if content_parts|length > 8 and content_parts[8]|trim != "" %}
+                                                    <div>
+                                                        <h6 class="text-secondary"><i class="fas fa-link me-2"></i>References</h6>
+                                                        <ul class="list-group">
+                                                            {% for line in content_parts[8].split('\n') %}
+                                                                {% if line.startswith('- ') %}
+                                                                    <li class="list-group-item py-1 small">{{ line[2:] }}</li>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <p class="mb-0">{{ update.content }}</p>
+                                        {% endif %}
                                     </div>
                                     <div class="card-footer bg-light py-1">
-                                        <small class="text-muted">By: {{ update.user_id }}</small>
+                                        <small class="text-muted">By: {% if 'AI Analysis Results' in update.content %}<i class="fas fa-robot me-1"></i>AI Assistant{% else %}{{ update.user_id }}{% endif %}</small>
                                     </div>
                                 </div>
                             {% endfor %}
@@ -244,6 +340,23 @@
                     </ul>
                 </div>
             </div>
+
+            <!-- AI Analysis button - make it more prominent -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i>AI Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Use AI to analyze this incident and get recommended solutions</p>
+                    <form action="{{ url_for('incident.analyze_incident', incident_id=incident.id) }}" method="POST">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-brain me-2"></i>Analyze with AI
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 {% else %}
@@ -295,6 +408,13 @@
                             </select>
                         </div>
                         
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="auto_analyze" name="auto_analyze" checked>
+                            <label class="form-check-label" for="auto_analyze">
+                                <i class="fas fa-robot me-1"></i> Automatically analyze with AI after submission
+                            </label>
+                        </div>
+                        
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-paper-plane me-2"></i>Submit Incident
@@ -305,19 +425,27 @@
             </div>
         </div>
         
-        <!-- Knowledge Base Suggestions -->
+        <!-- AI Suggestions -->
         <div class="col-lg-4">
-            <div class="card knowledge-base-suggestions">
-                <div class="card-header bg-info text-white">
+            <div class="card ai-suggestions">
+                <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-lightbulb me-2"></i>Potential Solutions
+                        <i class="fas fa-robot me-2"></i>AI Assistant
                     </h5>
                 </div>
-                <div id="kb-suggestions" class="card-body" style="display: none;">
-                    <!-- Suggestions will be loaded here dynamically -->
-                    <div class="text-center py-3">
-                        <p class="text-muted mb-0">Start describing your incident to find potential solutions</p>
+                <div id="ai-suggestions" class="card-body">
+                    <div class="text-center py-3" id="ai-initial-message">
+                        <p class="text-muted mb-0">Start describing your incident to get AI-powered suggestions</p>
                     </div>
+                    <div id="ai-loading" style="display: none;">
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <p class="text-center mt-2">Analyzing your input...</p>
+                    </div>
+                    <div id="ai-content" style="display: none;"></div>
                 </div>
             </div>
         </div>
@@ -329,5 +457,91 @@
 {% if not incident %}
 <!-- Include Knowledge Base suggestions JavaScript only for new incident page -->
 <script src="{{ url_for('static', filename='js/kb_suggestions.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elements for incident creation form
+    const incidentForm = document.getElementById('incident-form');
+    const titleInput = document.getElementById('title');
+    const descriptionInput = document.getElementById('description');
+    const severityInput = document.getElementById('severity');
+    const aiInitialMessage = document.getElementById('ai-initial-message');
+    const aiLoading = document.getElementById('ai-loading');
+    const aiContent = document.getElementById('ai-content');
+    
+    if (!incidentForm) return;
+    
+    // Add debounce function to prevent too many updates
+    function debounce(func, timeout = 800) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+    
+    // Function to update the AI content
+    const updateAIContent = debounce(() => {
+        const title = titleInput.value.trim();
+        const description = descriptionInput.value.trim();
+        
+        // Only show content if we have enough data
+        if (title.length < 3 && description.length < 10) {
+            aiInitialMessage.style.display = 'block';
+            aiContent.style.display = 'none';
+            return;
+        }
+        
+        // Show "thinking" animation
+        aiInitialMessage.style.display = 'none';
+        aiLoading.style.display = 'block';
+        aiContent.style.display = 'none';
+        
+        // Simulate AI analyzing the input (in production you could call an actual endpoint)
+        setTimeout(() => {
+            aiLoading.style.display = 'none';
+            aiContent.style.display = 'block';
+            
+            // Get severity text
+            let severityText = "";
+            if (severityInput.value === "critical") severityText = "critical severity";
+            else if (severityInput.value === "high") severityText = "high severity";
+            else if (severityInput.value === "medium") severityText = "medium severity";
+            else if (severityInput.value === "low") severityText = "low severity";
+            
+            // Generate real-time assistance based on entered data
+            aiContent.innerHTML = `
+                <div class="mb-3">
+                    <h6 class="text-primary"><i class="fas fa-lightbulb me-2"></i>AI Insights</h6>
+                    <p>Based on your description, this appears to be a ${severityText} incident related to 
+                    ${title.toLowerCase().includes('network') ? 'network connectivity' : 
+                      title.toLowerCase().includes('server') ? 'server performance' : 
+                      title.toLowerCase().includes('security') ? 'security' : 'system functionality'}.
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-success"><i class="fas fa-check-circle me-2"></i>Recommendations</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item py-1">Include specific error messages if available</li>
+                        <li class="list-group-item py-1">Mention when the issue started</li>
+                        <li class="list-group-item py-1">Note any recent changes that might be related</li>
+                        <li class="list-group-item py-1">List affected systems or users</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    After submission, our AI will analyze this incident and suggest potential solutions.
+                </div>
+            `;
+        }, 1200);
+    });
+    
+    // Add event listeners
+    titleInput.addEventListener('input', updateAIContent);
+    descriptionInput.addEventListener('input', updateAIContent);
+    severityInput.addEventListener('change', updateAIContent);
+});
+</script>
 {% endif %}
 {% endblock %}
