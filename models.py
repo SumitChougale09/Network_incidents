@@ -3,8 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
 import uuid
 from sqlalchemy.sql import func
-from app import db
-
+from extentions import db 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     

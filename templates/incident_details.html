@@ -226,7 +226,7 @@
                         <li class="list-group-item">
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1">Incident Resolved</h6>
-                                <small>{{ incident.resolved_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                <small>{{ incident.resolved_at.strftime('%Y-%m-%d %H:%M') if incident.resolved_at else 'Not available'}}</small>
                             </div>
                             <p class="mb-1">Issue has been resolved</p>
                         </li>
@@ -236,7 +236,7 @@
                         <li class="list-group-item">
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1">Incident Closed</h6>
-                                <small>{{ incident.closed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                <small>{{ incident.closed_at.strftime('%Y-%m-%d %H:%M')if incident.closed_at else 'Not available' }}</small>
                             </div>
                             <p class="mb-1">Incident case closed</p>
                         </li>

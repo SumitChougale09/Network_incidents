@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models import Incident, IncidentUpdate, Team, User, get_incident_stats, get_recent_activities
-
+import asyncio
+from ai_agent import NetworkIncidentAgent
 incident_bp = Blueprint('incident', __name__)
 
 @incident_bp.route('/dashboard')
